@@ -65,7 +65,7 @@ StagePickerMorph, CustomBlockDefinition*/
 
 /*jshint esversion: 11, bitwise: false, evil: true*/
 
-modules.threads = '2022-October-21';
+modules.threads = '2022-October-24';
 
 var ThreadManager;
 var Process;
@@ -4076,8 +4076,12 @@ Process.prototype.hyperMonadic = function (baseOp, arg) {
     return baseOp(arg);
 };
 
-Process.prototype.hyperDyadic = function (baseOp, a, b) {
+Process.prototype.hyperDyadic = function (baseOp, a, b, atoma, atomb) {
     // enable dyadic operations to be performed on lists and tables
+    // atoma and atomb are optional monadic callback predicates indicating
+    // whether a or b are to be treated as scalar atoms despite being
+    // lists. This is currenly used for treating 2-item numerical lists as
+    // atomic points of x-/y-coordinates in some primitives.
     var len, i, result;
     if (this.isMatrix(a)) {
         if (this.isMatrix(b)) {
@@ -4087,37 +4091,41 @@ Process.prototype.hyperDyadic = function (baseOp, a, b) {
             len = Math.min(a.length, b.length);
             result = new Array(len);
             for (i = 0; i < len; i += 1) {
-                result[i] = this.hyperDyadic(baseOp, a[i], b[i]);
+                result[i] = this.hyperDyadic(baseOp, a[i], b[i], atoma, atomb);
             }
             return new List(result);
         }
-        return a.map(each => this.hyperDyadic(baseOp, each, b));
+        return a.map(each => this.hyperDyadic(baseOp, each, b, atoma, atomb));
     }
     if (this.isMatrix(b)) {
-        return b.map(each => this.hyperDyadic(baseOp, a, each));
+        return b.map(each => this.hyperDyadic(baseOp, a, each, atoma, atomb));
     }
-    return this.hyperZip(baseOp, a, b);
+    return this.hyperZip(baseOp, a, b, atoma, atomb);
 };
 
-Process.prototype.hyperZip = function (baseOp, a, b) {
+Process.prototype.hyperZip = function (baseOp, a, b, atoma, atomb) {
     // enable dyadic operations to be performed on lists and tables
+    // atoma and atomb are optional monadic callback predicates indicating
+    // whether a or b are to be treated as scalar atoms despite being
+    // lists. This is currenly used for treating 2-item numerical lists as
+    // atomic points of x-/y-coordinates in some primitives.
     var len, i, result;
-    if (a instanceof List) {
-        if (b instanceof List) {
+    if (!(atoma && atoma(a)) && a instanceof List) {
+        if (!(atomb && atomb(b)) && b instanceof List) {
             // zip both arguments ignoring out-of-bounds indices
             a = a.itemsArray();
             b = b.itemsArray();
             len = Math.min(a.length, b.length);
             result = new Array(len);
             for (i = 0; i < len; i += 1) {
-                result[i] = this.hyperZip(baseOp, a[i], b[i]);
+                result[i] = this.hyperZip(baseOp, a[i], b[i], atoma, atomb);
             }
             return new List(result);
         }
-        return a.map(each => this.hyperZip(baseOp, each, b));
+        return a.map(each => this.hyperZip(baseOp, each, b, atoma, atomb));
     }
-    if (b instanceof List) {
-        return b.map(each => this.hyperZip(baseOp, a, each));
+    if (!(atomb && atomb(b)) && b instanceof List) {
+        return b.map(each => this.hyperZip(baseOp, a, each, atoma, atomb));
     }
     return baseOp(a, b);
 };
@@ -5415,11 +5423,18 @@ Process.prototype.spritesAtPoint = function (point, stage) {
 
 Process.prototype.reportRelationTo = function (relation, name) {
     if (this.enableHyperOps) {
-        if (name instanceof List && !this.isCoordinate(name)) {
-            return name.map(each => this.reportRelationTo(relation, each));
-        }
+        return this.hyperDyadic(
+            (rel, nam) => this.reportBasicRelationTo(rel, nam),
+            relation,
+            name,
+            null,
+            n => this.isCoordinate(n)
+        );
     }
+    return this.reportBasicRelationTo(relation, name);
+};
 
+Process.prototype.reportBasicRelationTo = function (relation, name) {
 	var rel = this.inputOption(relation);
  	if (rel === 'distance') {
   		return this.reportDistanceTo(name);
@@ -5429,6 +5444,9 @@ Process.prototype.reportRelationTo = function (relation, name) {
     }
     if (rel === 'direction') {
     	return this.reportDirectionTo(name);
+    }
+    if (this.reportTypeOf(rel) === 'number') {
+        return this.reportRayLengthTo(name, rel);
     }
     return 0;
 };
@@ -5469,10 +5487,11 @@ Process.prototype.reportDistanceTo = function (name) {
     return 0;
 };
 
-Process.prototype.reportRayLengthTo = function (name) {
+Process.prototype.reportRayLengthTo = function (name, relativeAngle = 0) {
     // raycasting edge detection - answer the distance between the asking
     // sprite's rotation center to the target sprite's outer edge (the first
-    // opaque pixel) in the asking sprite's current direction
+    // opaque pixel) in the asking sprite's current direction offset by
+    // an optional relative angle in degrees
     var thisObj = this.blockReceiver(),
         thatObj,
         stage,
@@ -5536,7 +5555,8 @@ Process.prototype.reportRayLengthTo = function (name) {
     if (!(thatObj instanceof SpriteMorph)) {return -1; }
 
     // determine intersections with the target's bounding box
-    dir = thisObj.heading;
+    dir = thisObj.heading + relativeAngle;
+    dir = ((+dir % 360) + 360) % 360;
     targetBounds = thatObj.bounds;
     top = targetBounds.top();
     bottom = targetBounds.bottom();
