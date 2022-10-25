@@ -6169,19 +6169,19 @@ Process.prototype.reportMouseDown = function () {
 
 Process.prototype.reportKeyPressed = function (keyString) {
     // hyper-monadic
-    var stage;
     if (this.homeContext.receiver) {
-        stage = this.homeContext.receiver.parentThatIsA(StageMorph);
+        var stage = this.homeContext.receiver.parentThatIsA(StageMorph);
         if (stage) {
-            if (this.inputOption(keyString) === 'any key') {
-                return Object.keys(stage.keysPressed).length > 0;
+            var keyPressed = keyString => {
+                if (keyString instanceof List && this.enableHyperOps) {
+                    return keyString.map(keyPressed);
+                }
+                if (this.inputOption(keyString) === 'any key') {
+                    return Object.keys(stage.keysPressed).length > 0;
+                }
+                return stage.keysPressed[keyString === ' ' ? 'space' : keyString] !== undefined;
             }
-            if (keyString instanceof List && this.enableHyperOps) {
-                return keyString.map(
-                    each => stage.keysPressed[each] !== undefined
-                );
-            }
-            return stage.keysPressed[keyString] !== undefined;
+            return keyPressed(keyString);
         }
     }
     return false;
