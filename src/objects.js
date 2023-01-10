@@ -1676,8 +1676,8 @@ SpriteMorph.prototype.initBlockMigrations = function () {
             offset: 1
         },
         reportDistanceTo: {
-        	selector: 'reportRelationTo',
-         	inputs: [['distance']],
+            selector: 'reportRelationTo',
+            inputs: [['distance']],
             offset: 1
         },
         comeToFront: {
@@ -4753,7 +4753,7 @@ SpriteMorph.prototype.removeClone = function () {
         // this.stopTalking();
         this.parent.threads.stopAllForReceiver(this);
         this.parts.slice().forEach(part => {
-        	this.detachPart(part);
+            this.detachPart(part);
             part.removeClone();
         });
         this.corpsify();
@@ -4772,7 +4772,7 @@ SpriteMorph.prototype.perpetuate = function () {
     var stage = this.parentThatIsA(StageMorph),
         ide = this.parentThatIsA(IDE_Morph);
 
-	// make sure my exemplar-chain is fully perpetuated
+    // make sure my exemplar-chain is fully perpetuated
     if (this.exemplar) {
         this.exemplar.perpetuate();
     }
@@ -4814,7 +4814,7 @@ SpriteMorph.prototype.release = function () {
         return;
     }
 
-	// make sure all parts and instances are also released
+    // make sure all parts and instances are also released
     this.parts.forEach(part => part.release());
     this.instances.forEach(inst => inst.release());
     this.isTemporary = true;
@@ -6307,17 +6307,17 @@ SpriteMorph.prototype.forward = function (steps) {
         dist = steps * this.parent.scale || 0,
         dot = 0.1;
 
-	if (dist === 0 && this.isDown) { // draw a dot
- 		// dot = Math.min(this.size, 1);
- 		this.isDown = false;
+    if (dist === 0 && this.isDown) { // draw a dot
+        // dot = Math.min(this.size, 1);
+        this.isDown = false;
         this.forward(dot * -0.5);
         this.isDown = true;
         this.forward(dot);
         this.isDown = false;
         this.forward(dot * -0.5);
         this.isDown = true;
-     	return;
- 	} else if (dist >= 0) {
+        return;
+    } else if (dist >= 0) {
         dest = this.position().distanceAngle(dist, this.heading);
     } else {
         dest = this.position().distanceAngle(
@@ -7793,8 +7793,8 @@ SpriteMorph.prototype.allLocalVariableNames = function (sorted, all) {
         return x.toLowerCase() < y.toLowerCase() ? -1 : 1;
     }
 
-	if (sorted) {
- 		data.sort(alphabetically);
+    if (sorted) {
+        data.sort(alphabetically);
     }
     return data;
 };
@@ -8085,16 +8085,16 @@ SpriteMorph.prototype.destroy = function () {
 // SpriteMorph highlighting
 
 SpriteMorph.prototype.flash = function () {
-	var world = this.world();
+    var world = this.world();
     this.addHighlight();
-	world.animations.push(new Animation(
-		nop,
-  		nop,
-    	0,
-     	800,
+    world.animations.push(new Animation(
+        nop,
+        nop,
+        0,
+        800,
         nop,
         () => this.removeHighlight()
-	));
+    ));
 };
 
 SpriteMorph.prototype.addHighlight = function (oldHighlight) {
@@ -8725,7 +8725,7 @@ StageMorph.prototype.projectionSnap = function() {
 
 StageMorph.prototype.getPixelColor = function (aPoint) {
     var point, context, data;
-	if (this.trailsCanvas) {
+    if (this.trailsCanvas) {
         point = aPoint.subtract(this.bounds.origin);
         context = this.penTrailsMorph().getImage().getContext('2d');
         data = context.getImageData(point.x, point.y, 1, 1);
@@ -8741,7 +8741,7 @@ StageMorph.prototype.getPixelColor = function (aPoint) {
                     data.data[3] / 255
                 );
             }
-        	return StageMorph.uber.getPixelColor.call(this, aPoint);
+            return StageMorph.uber.getPixelColor.call(this, aPoint);
         }
         return new Color(
             data.data[0],
@@ -8749,7 +8749,7 @@ StageMorph.prototype.getPixelColor = function (aPoint) {
             data.data[2],
             data.data[3] / 255
         );
- 	}
+    }
 };
 
 // StageMorph accessing
@@ -10496,10 +10496,10 @@ StageMorph.prototype.deletableVariableNames = function () {
 };
 
 StageMorph.prototype.allLocalVariableNames
-	= SpriteMorph.prototype.allLocalVariableNames;
+    = SpriteMorph.prototype.allLocalVariableNames;
 
 StageMorph.prototype.allGlobalVariableNames
-	= SpriteMorph.prototype.allGlobalVariableNames;
+    = SpriteMorph.prototype.allGlobalVariableNames;
 
 // StageMorph inheritance - custom blocks
 
@@ -11464,7 +11464,7 @@ SVG_Costume.prototype.parseShapes = function () {
 };
 
 SVG_Costume.prototype.edit = function (
-	aWorld,
+    aWorld,
     anIDE,
     isnew,
     oncancel,
@@ -13662,13 +13662,13 @@ StagePickerMorph.prototype.addItem = function (
 // StagePickerMorph popping up
 
 StagePickerMorph.prototype.popup = function (stage, pos) {
-	var scroller;
+    var scroller;
 
     this.setPosition(pos);
     this.keepWithin(stage);
 
     if (this.bottom() > stage.bottom()) {
-    	// scroll menu items if the menu is taller than the stage
+        // scroll menu items if the menu is taller than the stage
         scroller = this.scroll();
         this.bounds.corner.y = stage.bottom() - 2;
         scroller.setHeight(stage.bottom() - scroller.top() - this.edge - 2);
